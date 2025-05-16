@@ -1,7 +1,0 @@
-https://hogent.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=f7cc90aa-bb67-4cb1-9fb5-b22f00918e4f
-
-- Overlopen omgeving en scripts van 00:00 - 7:36 
-- Deployment van de omgeving zelf van 7:36 tot 14:00
-- Overlopen checklist en aantonen dat alles correct werkt 14:00 - 26:38
-
-Op x2 is de video ongeveer 13 minuten! :)
