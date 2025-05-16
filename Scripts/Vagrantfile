@@ -1,0 +1,73 @@
+# Define the shared folder path as a variable
+shared_folder_path = "D:\\WindowsServer2\\WS2-2425-EP1-AghaddarRidwan"
+iso_path = "C:/Users/ridwan/Downloads/en_sql_server_2019_standard_x64_dvd_814b57aa.iso"
+
+Vagrant.configure("2") do |config|
+  # Shared folder configuration
+  config.vm.synced_folder ".", "/vagrant", disabled: false
+
+  # Server 1
+  config.vm.define "server1" do |server1|
+    # This is the base image for the VM - do not change this!
+    server1.vm.box = "gusztavvargadr/windows-server-2022-standard-core"
+    # Connect the second adapter to an internal network, do not configure IP (the provided IP is just a placeholder)
+    server1.vm.network "private_network", ip: "192.168.24.10", auto_config: false
+    # Set the host name of the VM
+    server1.vm.hostname = "server1"
+    # Shared folder setup for Server 1
+    server1.vm.synced_folder shared_folder_path, "/vagrant_shared", disabled: false
+    # VirtualBox specific configuration
+    server1.vm.provider "virtualbox" do |vb|
+      # VirtualBox Display Name
+      vb.name = "Server1_AD_DNS_DHCP_CA"
+      # VirtualBox Group
+      vb.customize ["modifyvm", :id, "--groups", "/WS2"]
+      # 2GB RAM
+      vb.memory = "2048"
+      # 2 CPUs
+      vb.cpus = "2"
+      # Automatically remount the shared folder
+      vb.customize ["sharedfolder", "add", :id, "--name", "vagrant_shared2", "--hostpath", shared_folder_path, "--automount"]
+    end
+  end
+
+  # Server 2
+  config.vm.define "server2" do |server2|
+    server2.vm.box = "gusztavvargadr/windows-server-2022-standard-core"
+    server2.vm.network "private_network", ip: "192.168.24.20", auto_config: false
+    server2.vm.hostname = "server2"
+    # Shared folder setup for Server 2
+    server2.vm.synced_folder shared_folder_path, "/vagrant_shared", disabled: false
+    server2.vm.provider "virtualbox" do |vb|
+      vb.name = "Server2_DNS_SSMS"
+      vb.customize ["modifyvm", :id, "--groups", "/WS2"]
+      vb.memory = "2048"
+      vb.cpus = "2"
+      # Automatically remount the shared folder
+      vb.customize ["sharedfolder", "add", :id, "--name", "vagrant_shared2", "--hostpath", shared_folder_path, "--automount"]
+      # Mount the sql server iso (PAD AANPASSEN INDIEN NODIG)
+      vb.customize ["storageattach", :id, "--storagectl", "IDE Controller", "--port", 1, "--device", 0, "--type", "dvddrive", "--medium", iso_path]
+    end
+  end
+
+  # Client
+  config.vm.define "client" do |client|
+    client.vm.box = "gusztavvargadr/windows-10-22h2-enterprise"
+    client.vm.network "private_network", ip: "192.168.24.12", auto_config: false
+    client.vm.hostname = "client"
+    # Shared folder setup for Client
+    client.vm.synced_folder shared_folder_path, "/vagrant_shared", disabled: false
+    client.vm.provider "virtualbox" do |vb|
+      vb.name = "client"
+      vb.customize ["modifyvm", :id, "--groups", "/WS2"]
+      vb.memory = "4096"
+      vb.cpus = "4"
+      # Automatically remount the shared folder
+      vb.customize ["sharedfolder", "add", :id, "--name", "vagrant_shared2", "--hostpath", shared_folder_path, "--automount"]
+    end
+  end
+
+  # Is Hyper-V volledig uitgeschakeld, maar krijg je nog steeds timeouts bij uitrollen van de client?
+  # Verwijder dan het #-teken voor de onderstaande regel om de timeout te verhogen - indien nodig kan je de waarde nog aanpassen (default is 300 seconden)
+  # config.vm.boot_timeout = 600
+end
